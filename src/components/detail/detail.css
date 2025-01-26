@@ -1,0 +1,130 @@
+.detail {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background-color: #f9f9f9;
+    box-sizing: border-box;
+  }
+  
+  .user {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .user img {
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    margin-bottom: 10px;
+  }
+  
+  .user h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+  }
+  
+  .user p {
+    font-size: 1rem;
+    color: #666;
+  }
+  
+  .info {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .option {
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+  }
+  
+  .title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem;
+    color: #333;
+  }
+  
+  .content {
+    padding: 10px 0;
+    font-size: 0.9rem;
+    color: #555;
+  }
+  
+  .photos {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .photoItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  
+  .phoneDetail {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .photoItem img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+  }
+  
+  .icons {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+  
+  button {
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    opacity: 0.9;
+  }
+  
+  button:active {
+    transform: scale(0.98);
+  }
+  
+  button.logout {
+    background-color: #ddd;
+    color: #333;
+  }
+  
+  button.logout:hover {
+    background-color: #bbb;
+  }
+  
+  button.block {
+    background-color: #ff5e57;
+    color: #fff;
+  }
+  
+  button.block:hover {
+    background-color: #e04846;
+  }
+  

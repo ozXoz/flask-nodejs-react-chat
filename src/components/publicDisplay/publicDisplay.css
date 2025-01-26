@@ -1,0 +1,15 @@
+.public-display {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 20px;
+  padding: 20px;
+  min-height: 100vh;  
+}
+
+@media (max-width: 768px) {
+  .public-display {
+    grid-template-columns: 1fr;  
+    grid-template-rows: auto auto auto;
+    padding: 10px;  
+  }
+}
