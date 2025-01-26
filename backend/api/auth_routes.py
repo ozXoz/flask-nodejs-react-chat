@@ -71,6 +71,7 @@ def login():
         return jsonify({'error': str(e)}), 500
 
 
+
 @auth.route('/debug-mongo', methods=['GET'])
 def debug_mongo():
     try:

@@ -1,22 +1,61 @@
-// src/components/login/Login.jsx
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './login.css';
 
-const Login = ({ onLoggedIn }) => {
-  const handleSubmit = (e) => {
+const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onLoggedIn();  // Call the callback function passed from the parent component
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log('Token received:', data.access_token); // Debug token
+        localStorage.setItem('access_token', data.access_token);
+        navigate('/dashboard'); // Navigate to dashboard
+      } else {
+        setError(data.error || 'An error occurred');
+      }
+    } catch (err) {
+      setError('Unable to connect to the server');
+    }
   };
 
   return (
     <form className="login" onSubmit={handleSubmit}>
+      {error && <div className="error">{error}</div>}
       <label htmlFor="email">Email:</label>
-      <input id="email" type="email" required />
+      <input
+        id="email"
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
       <label htmlFor="password">Password:</label>
-      <input id="password" type="password" required />
+      <input
+        id="password"
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
       <button type="submit">Login</button>
     </form>
   );
-}
+};
 
 export default Login;

@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 from extensions.database import mongo
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS  # Import CORS
 
 # Load environment variables
 load_dotenv()
@@ -20,6 +21,8 @@ def create_app():
     app.config['MONGO_URI'] = os.getenv('MONGO_URI')
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret_key')
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')  # Add JWT secret
+
+    CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins
 
     # Initialize extensions
     mongo.init_app(app)  # Initialize MongoDB
