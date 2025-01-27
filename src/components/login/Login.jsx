@@ -10,7 +10,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     try {
       const response = await fetch('http://127.0.0.1:5000/auth/login', {
         method: 'POST',
@@ -19,13 +19,15 @@ const Login = () => {
         },
         body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
-        console.log('Token received:', data.access_token); // Debug token
+        // Store the token, email, and nickname
         localStorage.setItem('access_token', data.access_token);
-        navigate('/dashboard'); // Navigate to dashboard
+        localStorage.setItem('nickname', data.nickname); // Save nickname
+        localStorage.setItem('email', data.email);       // Save email
+        navigate('/dashboard');
       } else {
         setError(data.error || 'An error occurred');
       }
@@ -33,6 +35,7 @@ const Login = () => {
       setError('Unable to connect to the server');
     }
   };
+  
 
   return (
     <form className="login" onSubmit={handleSubmit}>

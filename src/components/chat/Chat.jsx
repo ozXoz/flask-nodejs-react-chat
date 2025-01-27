@@ -1,126 +1,131 @@
-import React, { useEffect, useRef, useState } from "react";
-import EmojiPicker from "emoji-picker-react";
+import React, { useState, useEffect, useRef } from "react"; // Ensure useRef is included
+import socket from "../utils/socket";
 import "./chat.css";
 
-const Chat = () => {
-    const [open, setOpen] = useState(false);
-    const [text, setText] = useState("");
-    const endRef = useRef(null); // Correctly initialize endRef
+const Chat = ({ recipient }) => {
+  const [messages, setMessages] = useState([]); // Messages in the selected conversation
+  const [message, setMessage] = useState(""); // Input message
+  const messagesEndRef = useRef(null); // Ref for auto-scroll
+  const email = localStorage.getItem("email"); // Logged-in user's email
+  const nickname = localStorage.getItem("nickname"); // Sender's nickname
 
-    // Automatically scroll to the bottom of the chat
-    useEffect(() => {
-        endRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [text]); // Add 'text' as dependency to scroll on every new input
+  // Generate a consistent `chatId`
+  const chatId =
+    recipient && [nickname, recipient.participant].sort().join("_");
 
-    const handleEmojiClick = (emojiData) => {
-        setText((prevText) => prevText + emojiData.emoji);
-        console.log("Emoji clicked:", emojiData.emoji);
+  // Fetch previous messages when a recipient is selected
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (recipient) {
+        try {
+          const response = await fetch(
+            `http://127.0.0.1:5000/auth/messages?email=${email}&recipient=${recipient.participant}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setMessages(data); // Update state with previous messages
+          } else {
+            console.error("Failed to fetch messages:", response.statusText);
+          }
+        } catch (err) {
+          console.error("Error fetching messages:", err);
+        }
+      }
     };
 
-    const handleInputChange = (e) => {
-        setText(e.target.value);
-        console.log("User typed:", e.target.value);
+    fetchMessages();
+  }, [recipient, email]);
+
+  // Listen for real-time messages via Socket.IO
+  useEffect(() => {
+    const handleReceiveMessage = (data) => {
+      if (data.chatId === chatId) {
+        setMessages((prevMessages) => [...prevMessages, data]); // Add new message to the chat
+      }
     };
 
-    return (
-        <div className="chat">
-            {/* Top Header */}
-            <div className="top">
-                <div className="user">
-                    <img src="./avatar.png" alt="Avatar" className="avatar" />
-                    <div className="texts">
-                        <span className="name">Oz Korkmaz</span>
-                        <p className="message">Lorem ipsum dolor, sit amet.</p>
-                    </div>
-                </div>
-                <div className="icons">
-                    <img src="./phone.png" alt="Phone" className="icon" />
-                    <img src="./video.png" alt="Video" className="icon" />
-                    <img src="./info.png" alt="Info" className="icon" />
-                </div>
-            </div>
+    socket.on("receiveMessage", handleReceiveMessage);
 
-            {/* Chat Messages */}
-            <div className="center">
-                <div className="message own">
-                    <img src="https://cdn3.iconfinder.com/data/icons/business-avatar-1/512/11_avatar-512.png" alt="Avatar" className="avatar-small" />
-                    <div className="texts">
-                        <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est</p>
-                    </div>
-                    <span className="time">1 min ago</span>
-                </div>
-                <div className="message">
-                    <img src="./avatar.png" alt="Avatar" className="avatar-small" />
-                    <div className="texts">
-                        <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper </p>
-                    </div>
-                    <span className="time">2 min ago</span>
-                </div>
-                <div className="message own">
-                    <img src="./avatar.png" alt="Avatar" className="avatar-small" />
-                    <div className="texts">
-                        <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est</p>
-                    </div>
-                    <span className="time">1 min ago</span>
-                </div>
+    return () => {
+      socket.off("receiveMessage", handleReceiveMessage); // Cleanup listener
+    };
+  }, [chatId]);
 
-                <div className="message own">
-                    <img src="./avatar.png" alt="Avatar" className="avatar-small" />
-                    <div className="texts">
-                        <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est</p>
-                    </div>
-                    <span className="time">1 min ago</span>
-                </div>
+  // Send a new message
+  const sendMessage = () => {
+    if (message.trim() && recipient) {
+      const msgData = {
+        chatId,
+        sender: nickname,
+        email, // Sender's email
+        recipient: recipient.participant,
+        message,
+        timestamp: new Date().toISOString(),
+      };
 
+      // Emit the message using Socket.IO
+      socket.emit("sendMessage", msgData);
 
-                <div className="message own">
-                    <img src="./avatar.png" alt="Avatar" className="avatar-small" />
-                    <div className="texts">
-                        <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est</p>
-                    </div>
-                    <span className="time">1 min ago</span>
-                </div>
-                <div className="message">
-                    <img src="https://icons.veryicon.com/png/o/miscellaneous/user-avatar/user-avatar-male-5.png" alt="Avatar" className="avatar-small" />
-                    <div className="texts">
-                        <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper </p>
-                    </div>
-                    <span className="time">2 min ago</span>
-                </div>
-                {/* Scroll to bottom anchor */}
-                <div ref={endRef}></div>
-            </div>
+      // Optimistically update the local messages state
+      setMessages((prevMessages) => [...prevMessages, msgData]);
 
-            {/* Bottom Input Section */}
-            <div className="bottom">
-                <div className="icons">
-                    <img src="./mic.png" alt="Microphone" className="icon" />
-                    <img src="./camera.png" alt="Camera" className="icon" />
+      // Clear the input field
+      setMessage("");
+    } else {
+      console.error("Missing fields:", { message, recipient });
+    }
+  };
+
+  // Auto-scroll to the latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  return (
+    <div className="chat-main">
+      {recipient ? (
+        <>
+          {/* Chat Header */}
+          <div className="chat-header">
+            <h4>Chat with {recipient.participant}</h4>
+          </div>
+
+          {/* Chat Messages */}
+          <div className="chat-messages">
+            {messages.length > 0 ? (
+              messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`message ${msg.sender === nickname ? "own" : ""}`}
+                >
+                  <p>{msg.message}</p>
+                  <span>{new Date(msg.timestamp).toLocaleTimeString()}</span>
                 </div>
-                <input
-                    type="text"
-                    placeholder="Type a message..."
-                    className="input"
-                    value={text}
-                    onChange={handleInputChange}
-                />
-                <div className="emoji">
-                    <img
-                        src="./emoji.png"
-                        alt="Emoji Picker"
-                        onClick={() => setOpen((prev) => !prev)}
-                        className="icon"
-                    />
-                    {open && (
-                        <div className="emoji-picker-container">
-                            <EmojiPicker onEmojiClick={handleEmojiClick} />
-                        </div>
-                    )}
-                </div>
-                    <button className="sendButton">Send</button>
-            </div>
-        </div>
-    );
+              ))
+            ) : (
+              <p>No messages yet</p>
+            )}
+            <div ref={messagesEndRef}></div>
+          </div>
+
+          {/* Chat Input */}
+          <div className="chat-input">
+            <input
+              type="text"
+              placeholder="Type a message..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+            <button onClick={sendMessage} disabled={!message.trim()}>
+              Send
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="no-selection">Select a conversation to start chatting</div>
+      )}
+    </div>
+  );
 };
 
 export default Chat;

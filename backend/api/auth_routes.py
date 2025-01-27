@@ -45,7 +45,7 @@ def register():
 @auth.route('/login', methods=['POST'])
 def login():
     try:
-        db = mongo.get_db()  # Access the database instance
+        db = mongo.get_db()
 
         # Parse request data
         data = request.get_json()
@@ -65,10 +65,85 @@ def login():
         access_token = create_access_token(identity={'email': user['email'], 'nickname': user['nickname']})
 
         # Successful login
-        return jsonify({'message': 'Login successful!', 'access_token': access_token}), 200
+        return jsonify({
+            'message': 'Login successful!',
+            'access_token': access_token,
+            'email': user['email'],        # Include email
+            'nickname': user['nickname']  # Include nickname
+        }), 200
     except Exception as e:
         print(f"Error during login: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+@auth.route('/users', methods=['GET'])
+def search_users():
+    try:
+        db = mongo.get_db()
+        query = request.args.get('q', '').strip()  # Get the search query
+        users = list(db.users.find(
+            {"$or": [{"nickname": {"$regex": query, "$options": "i"}}, {"email": {"$regex": query, "$options": "i"}}]},
+            {"_id": 0, "email": 1, "nickname": 1}
+        ))
+        return jsonify(users), 200
+    except Exception as e:
+        print(f"Error during user search: {e}")
+        return jsonify({'error': 'Unable to fetch users'}), 500
+
+
+@auth.route('/messages', methods=['GET'])
+def get_messages():
+    try:
+        db = mongo.get_db()
+        email = request.args.get('email')  # Sender's email
+        recipient = request.args.get('recipient')  # Recipient's email/nickname
+
+        # Fetch messages where the sender and recipient match either way
+        conversations = list(db.messages.find(
+            {"chatId": {"$in": [f"{email}_{recipient}", f"{recipient}_{email}"]}},
+            {"_id": 0, "sender": 1, "recipient": 1, "message": 1, "timestamp": 1}
+        ).sort("timestamp", 1))
+        return jsonify(conversations), 200
+    except Exception as e:
+        print(f"Error fetching messages: {e}")
+        return jsonify({'error': 'Unable to fetch messages'}), 500
+
+
+
+@auth.route('/conversations', methods=['GET'])
+def get_conversations():
+    try:
+        db = mongo.get_db()
+        email = request.args.get('email')
+
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+
+        # Match conversations where the user is either the sender or recipient
+        conversations = db.messages.aggregate([
+            {"$match": {"$or": [{"email": email}, {"recipient": email}]}},
+            {"$group": {
+                "_id": {
+                    "$cond": [{"$eq": ["$email", email]}, "$recipient", "$email"]
+                },
+                "lastMessage": {"$last": "$message"},
+                "timestamp": {"$last": "$timestamp"}
+            }},
+            {"$project": {
+                "_id": 0,
+                "participant": "$_id",
+                "lastMessage": 1,
+                "timestamp": 1
+            }},
+            {"$sort": {"timestamp": -1}}
+        ])
+
+        result = list(conversations)
+        print("Fetched conversations:", result)
+        return jsonify(result), 200
+    except Exception as e:
+        print(f"Error fetching conversations: {e}")
+        return jsonify({'error': 'Unable to fetch conversations'}), 500
 
 
 
