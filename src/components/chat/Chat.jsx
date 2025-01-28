@@ -1,53 +1,85 @@
-import React, { useState, useEffect, useRef } from "react"; // Ensure useRef is included
+import React, { useState, useEffect, useRef } from "react";
 import socket from "../utils/socket";
 import "./chat.css";
 
-const Chat = ({ recipient }) => {
-  const [messages, setMessages] = useState([]); // Messages in the selected conversation
-  const [message, setMessage] = useState(""); // Input message
-  const messagesEndRef = useRef(null); // Ref for auto-scroll
-  const email = localStorage.getItem("email"); // Logged-in user's email
-  const nickname = localStorage.getItem("nickname"); // Sender's nickname
+const Chat = ({ recipient, onSelectRecipient }) => {
+  const [messages, setMessages] = useState([]); // Entire chat history
+  const [message, setMessage] = useState("");
+  const [conversations, setConversations] = useState([]); // Chat list with last message
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null); // To auto-scroll
+  const email = localStorage.getItem("email");
+  const nickname = localStorage.getItem("nickname");
 
-  // Generate a consistent `chatId`
-  const chatId =
-    recipient && [nickname, recipient.participant].sort().join("_");
+  const chatId = recipient && [nickname, recipient.participant].sort().join("_");
 
-  // Fetch previous messages when a recipient is selected
+  // Fetch all conversations (ChatList)
   useEffect(() => {
-    const fetchMessages = async () => {
-      if (recipient) {
-        try {
-          const response = await fetch(
-            `http://127.0.0.1:5000/auth/messages?email=${email}&recipient=${recipient.participant}`
-          );
-          if (response.ok) {
-            const data = await response.json();
-            setMessages(data); // Update state with previous messages
-          } else {
-            console.error("Failed to fetch messages:", response.statusText);
-          }
-        } catch (err) {
-          console.error("Error fetching messages:", err);
+    const fetchConversations = async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/chat/conversations?email=${email}`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log("[DEBUG] Fetched conversations:", data);
+          setConversations(data);
+        } else {
+          console.error("[ERROR] Failed to fetch conversations:", response.statusText);
         }
+      } catch (err) {
+        console.error("[ERROR] Error fetching conversations:", err);
       }
     };
+  
+    fetchConversations();
+  }, [email]);
+  
 
+  // Fetch all messages for the selected conversation
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (chatId) {
+        try {
+          console.log("[DEBUG] Fetching messages for chatId:", chatId);
+    
+          const response = await fetch(
+            `http://127.0.0.1:5000/auth/chat/messages/${chatId}`
+          );
+    
+          if (response.ok) {
+            const data = await response.json();
+            console.log("[DEBUG] Messages fetched:", data);
+    
+            setMessages(data);
+          } else {
+            console.error("[ERROR] Failed to fetch messages:", response.statusText);
+          }
+        } catch (err) {
+          console.error("[ERROR] Error fetching messages:", err);
+        }
+      } else {
+        console.warn("[DEBUG] No chatId provided.");
+      }
+    };
+    
+    
+  
     fetchMessages();
-  }, [recipient, email]);
+  }, [chatId]);
+  
+  
 
-  // Listen for real-time messages via Socket.IO
+  // Listen for real-time updates
   useEffect(() => {
     const handleReceiveMessage = (data) => {
       if (data.chatId === chatId) {
-        setMessages((prevMessages) => [...prevMessages, data]); // Add new message to the chat
+        setMessages((prevMessages) => [...prevMessages, data]);
       }
     };
 
     socket.on("receiveMessage", handleReceiveMessage);
 
     return () => {
-      socket.off("receiveMessage", handleReceiveMessage); // Cleanup listener
+      socket.off("receiveMessage", handleReceiveMessage);
     };
   }, [chatId]);
 
@@ -57,26 +89,21 @@ const Chat = ({ recipient }) => {
       const msgData = {
         chatId,
         sender: nickname,
-        email, // Sender's email
+        email,
         recipient: recipient.participant,
         message,
         timestamp: new Date().toISOString(),
       };
 
-      // Emit the message using Socket.IO
       socket.emit("sendMessage", msgData);
-
-      // Optimistically update the local messages state
       setMessages((prevMessages) => [...prevMessages, msgData]);
-
-      // Clear the input field
       setMessage("");
     } else {
-      console.error("Missing fields:", { message, recipient });
+      console.error("Message or recipient is missing.");
     }
   };
 
-  // Auto-scroll to the latest message
+  // Auto-scroll to the bottom of the chat
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -85,12 +112,9 @@ const Chat = ({ recipient }) => {
     <div className="chat-main">
       {recipient ? (
         <>
-          {/* Chat Header */}
           <div className="chat-header">
             <h4>Chat with {recipient.participant}</h4>
           </div>
-
-          {/* Chat Messages */}
           <div className="chat-messages">
             {messages.length > 0 ? (
               messages.map((msg, index) => (
@@ -103,12 +127,10 @@ const Chat = ({ recipient }) => {
                 </div>
               ))
             ) : (
-              <p>No messages yet</p>
+              <p>No messages yet. Start the conversation!</p>
             )}
             <div ref={messagesEndRef}></div>
           </div>
-
-          {/* Chat Input */}
           <div className="chat-input">
             <input
               type="text"
@@ -122,7 +144,32 @@ const Chat = ({ recipient }) => {
           </div>
         </>
       ) : (
-        <div className="no-selection">Select a conversation to start chatting</div>
+        <div className="no-selection">
+          <h3>Conversations</h3>
+          {loading ? (
+            <p>Loading...</p>
+          ) : conversations.length > 0 ? (
+            conversations.map((conv, index) => (
+              <div
+                key={index}
+                className="conversation-item"
+                onClick={() => onSelectRecipient(conv)}
+              >
+                <img
+                  src="./avatar.png"
+                  alt="Avatar"
+                  className="conversation-avatar"
+                />
+                <div className="conversation-info">
+                  <span className="conversation-name">{conv.participant}</span>
+                  <span className="conversation-preview">{conv.lastMessage}</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p>No conversations found.</p>
+          )}
+        </div>
       )}
     </div>
   );

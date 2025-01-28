@@ -96,17 +96,28 @@ def get_messages():
     try:
         db = mongo.get_db()
         email = request.args.get('email')  # Sender's email
-        recipient = request.args.get('recipient')  # Recipient's email/nickname
+        recipient = request.args.get('recipient')  # Recipient's nickname or email
 
-        # Fetch messages where the sender and recipient match either way
+        # Debug: Ensure parameters are received correctly
+        print(f"[DEBUG] Fetching messages for: email={email}, recipient={recipient}")
+
+        # Construct chatId
+        chat_id = "_".join(sorted([email, recipient]))  # Consistent chatId generation
+
+        # Fetch messages where the chatId matches
         conversations = list(db.messages.find(
-            {"chatId": {"$in": [f"{email}_{recipient}", f"{recipient}_{email}"]}},
+            {"chatId": chat_id},
             {"_id": 0, "sender": 1, "recipient": 1, "message": 1, "timestamp": 1}
         ).sort("timestamp", 1))
+
+        # Debug: Log the fetched messages
+        print(f"[DEBUG] Messages fetched for chatId '{chat_id}': {conversations}")
+
         return jsonify(conversations), 200
     except Exception as e:
-        print(f"Error fetching messages: {e}")
+        print(f"[ERROR] Error fetching messages: {e}")
         return jsonify({'error': 'Unable to fetch messages'}), 500
+
 
 
 
@@ -119,7 +130,7 @@ def get_conversations():
         if not email:
             return jsonify({'error': 'Email is required'}), 400
 
-        # Match conversations where the user is either the sender or recipient
+        # Fetch the last message for each conversation
         conversations = db.messages.aggregate([
             {"$match": {"$or": [{"email": email}, {"recipient": email}]}},
             {"$group": {
@@ -145,6 +156,60 @@ def get_conversations():
         print(f"Error fetching conversations: {e}")
         return jsonify({'error': 'Unable to fetch conversations'}), 500
 
+
+@auth.route('/all_conversations', methods=['GET'])
+def get_all_conversations():
+    try:
+        db = mongo.get_db()
+        email = request.args.get('email')
+
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+
+        # Fetch all messages grouped by chatId
+        messages_by_chat = db.messages.aggregate([
+            {"$match": {"$or": [{"sender": email}, {"recipient": email}]}},
+            {"$group": {
+                "_id": "$chatId",
+                "messages": {"$push": {
+                    "sender": "$sender",
+                    "recipient": "$recipient",
+                    "message": "$message",
+                    "timestamp": "$timestamp"
+                }}
+            }},
+            {"$project": {"_id": 0, "chatId": "$_id", "messages": 1}}
+        ])
+
+        result = list(messages_by_chat)
+        print("[DEBUG] Fetched all conversations:", result)
+        return jsonify(result), 200
+    except Exception as e:
+        print(f"[ERROR] Error fetching all conversations: {e}")
+        return jsonify({'error': 'Unable to fetch conversations'}), 500
+
+
+
+
+
+@auth.route('/chat/messages/<chat_id>', methods=['GET'])
+def get_chat_messages(chat_id):
+    try:
+        db = mongo.get_db()
+
+        # Fetch messages for the specified chatId
+        messages = list(db.messages.find(
+            {"chatId": chat_id},
+            {"_id": 0, "sender": 1, "recipient": 1, "message": 1, "timestamp": 1}
+        ).sort("timestamp", 1))
+
+        # Debug: Log the fetched messages
+        print(f"[DEBUG] Messages fetched for chatId '{chat_id}': {messages}")
+
+        return jsonify(messages), 200
+    except Exception as e:
+        print(f"[ERROR] Error fetching messages for chatId '{chat_id}': {e}")
+        return jsonify({'error': 'Unable to fetch messages'}), 500
 
 
 @auth.route('/debug-mongo', methods=['GET'])

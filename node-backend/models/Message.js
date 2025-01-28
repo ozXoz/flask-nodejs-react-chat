@@ -10,5 +10,7 @@ const MessageSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now }, // Time the message was sent
 });
 
+// Add index for faster query performance
+MessageSchema.index({ chatId: 1, timestamp: 1 });
 // Export the Message model
 module.exports = mongoose.model('Message', MessageSchema);

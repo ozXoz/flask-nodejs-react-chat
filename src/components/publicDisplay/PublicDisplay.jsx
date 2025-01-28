@@ -31,6 +31,7 @@ const PublicDisplay = () => {
     <div className="public-display">
       <ChatList onSelectRecipient={handleSelectRecipient} />
       <Chat recipient={selectedRecipient} />
+      
       <Detail />
     </div>
   );

@@ -39,3 +39,19 @@ exports.saveMessage = async (req, res) => {
   }
 };
 
+
+exports.getConversations = async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ error: "Email is required." });
+    }
+
+    const conversations = await Conversation.find({ user: email }).sort("-timestamp");
+    res.status(200).json(conversations);
+  } catch (err) {
+    console.error("Error fetching conversations:", err);
+    res.status(500).json({ error: "Unable to fetch conversations" });
+  }
+};
