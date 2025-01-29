@@ -38,53 +38,59 @@ mongoose
   });
 
 // Real-time communication using Socket.IO
-io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
+// Real-time communication using Socket.IO
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
 
-  socket.on('sendMessage', async (msgData) => {
-    const { sender, recipient, message, chatId } = msgData;
-
-    if (!sender || !recipient || !message || !chatId) {
-      console.error('Missing required fields:', { sender, recipient, message, chatId });
+  socket.on("sendMessage", async (msgData) => {
+    console.log("Received message data:", msgData); // Debug log
+  
+    const { sender, recipient, chatId, email, message, file } = msgData;
+  
+    if (!sender || !recipient || !chatId || !email || (!message.trim() && !file)) {
+      console.error("Missing required fields:", { sender, recipient, message, chatId, file, email });
       return;
     }
-
+  
     try {
       // Save the message
-      const newMessage = new Message(msgData);
+      const newMessage = new Message({
+        chatId,
+        sender,
+        recipient,
+        email,
+        message: message || "",  // ✅ Allow empty message if file exists
+        file: file ? { name: file.name, url: file.url, type: file.type } : null,
+        timestamp: new Date(),
+      });
+  
       await newMessage.save();
-
-      // Update or create conversation for both users
-      await Promise.all([
-        Conversation.findOneAndUpdate(
-          { user: sender, participant: recipient },
-          { chatId, lastMessage: message, timestamp: new Date() },
-          { upsert: true, new: true }
-        ),
-        Conversation.findOneAndUpdate(
-          { user: recipient, participant: sender },
-          { chatId, lastMessage: message, timestamp: new Date() },
-          { upsert: true, new: true }
-        ),
-      ]);
-
-      console.log('Message saved and conversation updated:', newMessage);
-
-      // Emit the message to the recipient
-      io.emit('receiveMessage', newMessage);
+  
+      console.log("Message saved:", newMessage);
+  
+      // Emit message to all users
+      io.emit("receiveMessage", newMessage);
     } catch (err) {
-      console.error('Error saving message or updating conversation:', err);
+      console.error("Error saving message or updating conversation:", err);
     }
   });
+  
+  
+  
 
-  socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
+  socket.on("disconnect", () => {
+    console.log("A user disconnected:", socket.id);
   });
 });
+
+
 
 // REST API routes
 app.use('/chat', chatRoutes);
 app.use('/file', fileRoutes);
+app.use("/uploads", express.static("uploads"));
+
+
 
 // Start the server
 const PORT = process.env.PORT || 4000;

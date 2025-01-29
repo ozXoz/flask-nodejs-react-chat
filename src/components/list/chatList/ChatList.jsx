@@ -12,6 +12,7 @@ const ChatList = ({ onSelectRecipient }) => {
 
   // Fetch conversations on component mount
   useEffect(() => {
+    // Update this in the frontend ChatList.jsx
     const fetchConversations = async () => {
       setLoading(true);
       try {
@@ -31,9 +32,33 @@ const ChatList = ({ onSelectRecipient }) => {
         setLoading(false);
       }
     };
+    
+
 
     fetchConversations();
   }, [email]);
+
+  useEffect(() => {
+    const handleNewConversation = (data) => {
+      setConversations((prevConversations) => {
+        const exists = prevConversations.some(
+          (conv) => conv.chatId === data.chatId
+        );
+        if (!exists) {
+          return [data, ...prevConversations];
+        }
+        return prevConversations;
+      });
+    };
+  
+    socket.on("newConversation", handleNewConversation);
+  
+    return () => {
+      socket.off("newConversation", handleNewConversation);
+    };
+  }, []);
+  
+  
 
   // Dynamically update conversations via Socket.IO
   useEffect(() => {

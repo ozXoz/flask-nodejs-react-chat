@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 import "./detail.css";
 
 const Detail = () => {
@@ -9,12 +10,25 @@ const Detail = () => {
     sharedPhotos: false,
   });
 
+  const navigate = useNavigate(); // Initialize useNavigate for navigation
+
   // Toggle section visibility
   const toggleSection = (section) => {
     setOpenSections((prev) => ({
       ...prev,
-      [section]: !prev[section],  
+      [section]: !prev[section],
     }));
+  };
+
+  // Handle logout functionality
+  const handleLogout = () => {
+    // Clear user session data
+    localStorage.removeItem("email");
+    localStorage.removeItem("nickname");
+    localStorage.removeItem("token"); // If you store a token in localStorage
+
+    // Redirect to login page
+    navigate("/login");
   };
 
   return (
@@ -93,7 +107,9 @@ const Detail = () => {
         </div>
       </div>
       <button className="block">Block User</button>
-      <button className="logout">Logout</button>
+      <button className="logout" onClick={handleLogout}>
+        Logout
+      </button>
     </div>
   );
 };

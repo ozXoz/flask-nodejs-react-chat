@@ -1,10 +1,20 @@
-const express = require('express');
-const multer = require('multer');
-const { uploadFile } = require('../controllers/fileController');
+const express = require("express");
+const multer = require("multer");
+const { uploadFile } = require("../controllers/fileController");
+
 const router = express.Router();
 
-const upload = multer({ dest: 'uploads/' }); // Configure multer for file uploads
+// Multer storage configuration
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
 
-router.post('/upload', upload.single('file'), uploadFile);
+const upload = multer({ storage });
+
+// File upload route
+router.post("/upload", upload.single("file"), uploadFile);
 
 module.exports = router;

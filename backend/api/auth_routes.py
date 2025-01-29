@@ -5,7 +5,7 @@ from flask_jwt_extended import create_access_token
 
 auth = Blueprint('auth', __name__)
 
-@auth.route('/register', methods=['POST'])
+@auth.route('/register', methods=['POST']) 
 def register():
     try:
         db = mongo.get_db()  # Access the database instance
@@ -196,20 +196,19 @@ def get_all_conversations():
 def get_chat_messages(chat_id):
     try:
         db = mongo.get_db()
-
-        # Fetch messages for the specified chatId
         messages = list(db.messages.find(
             {"chatId": chat_id},
-            {"_id": 0, "sender": 1, "recipient": 1, "message": 1, "timestamp": 1}
+            {"_id": 0, "sender": 1, "recipient": 1, "message": 1, "file": 1, "timestamp": 1}
         ).sort("timestamp", 1))
 
-        # Debug: Log the fetched messages
         print(f"[DEBUG] Messages fetched for chatId '{chat_id}': {messages}")
 
         return jsonify(messages), 200
     except Exception as e:
         print(f"[ERROR] Error fetching messages for chatId '{chat_id}': {e}")
         return jsonify({'error': 'Unable to fetch messages'}), 500
+
+
 
 
 @auth.route('/debug-mongo', methods=['GET'])
