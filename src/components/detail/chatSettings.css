@@ -1,0 +1,76 @@
+.chat-settings {
+    padding: 20px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border-radius: 10px;
+    width: 300px;
+  }
+  
+  /* Avatar Section */
+  .avatar-section {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .avatar-img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+  }
+  
+  input[type="file"] {
+    display: block;
+    margin: 10px auto;
+  }
+  
+  /* Theme Selection */
+  .theme-section {
+    margin-top: 15px;
+  }
+  
+  .theme-section select {
+    width: 100%;
+    padding: 5px;
+    border-radius: 5px;
+  }
+  
+  /* Blocked Users */
+  .block-user-section {
+    margin-top: 15px;
+  }
+  
+  .blocked-user {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #eee;
+    padding: 5px;
+    margin: 5px 0;
+    border-radius: 5px;
+  }
+  
+  .unblock-btn {
+    background: red;
+    color: white;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+  }
+  
+  .unblock-btn:hover {
+    background: darkred;
+  }
+  
+  /* Light & Dark Mode */
+  :root {
+    --bg-color: white;
+    --text-color: black;
+  }
+  
+  [data-theme="dark"] {
+    --bg-color: #121212;
+    --text-color: white;
+  }
+  

@@ -9,6 +9,10 @@ const PublicDisplay = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState(null);
+  const [sharedFiles, setSharedFiles] = useState([]);
+  const [blockedUsers, setBlockedUsers] = useState(
+    JSON.parse(localStorage.getItem("blockedUsers")) || [] // ✅ Load from localStorage
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -30,9 +34,8 @@ const PublicDisplay = () => {
   return (
     <div className="public-display">
       <ChatList onSelectRecipient={handleSelectRecipient} />
-      <Chat recipient={selectedRecipient} />
-      
-      <Detail />
+      <Chat recipient={selectedRecipient} setSharedFiles={setSharedFiles} blockedUsers={blockedUsers} /> {/* ✅ Pass blockedUsers */}
+      <Detail sharedFiles={sharedFiles} blockedUsers={blockedUsers} setBlockedUsers={setBlockedUsers} /> {/* ✅ Ensure Detail updates blockedUsers */}
     </div>
   );
 };

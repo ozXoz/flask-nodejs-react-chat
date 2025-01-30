@@ -1,36 +1,69 @@
-/* General Container */
+/* ================== */
+/* General Theme Setup */
+/* ================== */
+:root {
+  --primary-color: #2563eb;
+  --background-color: #ffffff;
+  --text-color: #000000;
+  --sidebar-bg: #ffffff;
+  --message-bg: #e5e7eb;
+  --message-text: #111827;
+}
+
+[data-theme="dark"] {
+  --primary-color: #1e1e1e;
+  --background-color: #121212;
+  --text-color: #ffffff;
+  --sidebar-bg: #1e1e1e;
+  --message-bg: #2c2c2c;
+  --message-text: #ffffff;
+}
+
+[data-theme="blue"] {
+  --primary-color: #1e90ff;
+  --background-color: #e0f7fa;
+  --text-color: #003366;
+  --sidebar-bg: #bbdefb;
+  --message-bg: #e3f2fd;
+  --message-text: #003366;
+}
+
+[data-theme="green"] {
+  --primary-color: #008000;
+  --background-color: #e9f5e9;
+  --text-color: #004d00;
+  --sidebar-bg: #c8e6c9;
+  --message-bg: #dff0d8;
+  --message-text: #004d00;
+}
+
+/* ================== */
+/* General Chat Layout */
+/* ================== */
 .chat-container {
   display: grid;
   grid-template-columns: 1fr 2fr;
   height: 100vh;
-  background-color: #f9fafc;
-  color: #1a1a1a;
+  background-color: var(--background-color);
+  color: var(--text-color);
   font-family: 'Roboto', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Sidebar for Conversations */
 .chat-sidebar {
-  background-color: #ffffff;
+  background-color: var(--sidebar-bg);
   border-right: 1px solid #e5e7eb;
   padding: 20px;
   overflow-y: auto;
+  transition: background-color 0.3s ease;
 }
-
-.chat-image {
-  max-width: 250px;  /* Limit width */
-  max-height: 250px; /* Limit height */
-  border-radius: 8px; /* Optional: rounded corners */
-  object-fit: cover;  /* Ensure proper aspect ratio */
-  display: block;  /* Prevent extra spacing */
-  margin: 5px 0;  /* Add spacing */
-}
-
 
 .chat-sidebar h3 {
   font-size: 1.5rem;
   margin-bottom: 20px;
-  color: #4b5563;
   font-weight: 600;
+  color: var(--text-color);
 }
 
 /* Conversation Items */
@@ -47,7 +80,8 @@
 
 .conversation-item:hover,
 .conversation-item.active {
-  background-color: #f0f9ff;
+  background-color: var(--primary-color);
+  color: #ffffff;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   border-color: #cbd5e1;
 }
@@ -60,40 +94,16 @@
   border: 2px solid #d1d5db;
 }
 
-.conversation-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.conversation-name {
-  font-weight: 500;
-  font-size: 1rem;
-  color: #374151;
-}
-
-.conversation-preview {
-  font-size: 0.9rem;
-  color: #6b7280;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.timestamp {
-  font-size: 0.8rem;
-  color: #9ca3af;
-  margin-top: 5px;
-  text-align: right;
-}
-
+/* ================== */
 /* Chat Main Section */
+/* ================== */
 .chat-main {
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
+  background-color: var(--background-color);
   padding: 25px;
   border-left: 1px solid #e5e7eb;
+  transition: background-color 0.3s ease;
 }
 
 .chat-header {
@@ -104,12 +114,14 @@
 
 .chat-header h4 {
   font-size: 1.6rem;
-  color: #111827;
   margin: 0;
   font-weight: 600;
+  color: var(--text-color);
 }
 
+/* ================== */
 /* Messages Section */
+/* ================== */
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -126,7 +138,7 @@
 }
 
 .chat-messages::-webkit-scrollbar-track {
-  background: #ffffff;
+  background: var(--background-color);
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
@@ -134,19 +146,21 @@
   border-radius: 10px;
 }
 
+/* Individual Message Styling */
 .message {
   max-width: 70%;
   padding: 15px;
   border-radius: 12px;
-  background-color: #e5e7eb;
-  color: #111827;
+  background-color: var(--message-bg);
+  color: var(--message-text);
   font-size: 0.95rem;
   line-height: 1.5;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .message.own {
-  background-color: #2563eb;
+  background-color: var(--primary-color);
   color: #ffffff;
   margin-left: auto;
   text-align: right;
@@ -159,13 +173,16 @@
   margin-top: 8px;
 }
 
+/* ================== */
 /* Chat Input Section */
+/* ================== */
 .chat-input {
   display: flex;
   gap: 15px;
   padding: 15px 0;
   border-top: 1px solid #e5e7eb;
-  background-color: #ffffff;
+  background-color: var(--background-color);
+  transition: background-color 0.3s ease;
 }
 
 .chat-input input {
@@ -178,6 +195,35 @@
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
+.chat-input input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.3);
+}
+
+.chat-input button {
+  padding: 14px 20px;
+  background-color: var(--primary-color);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chat-input button:hover {
+  background-color: #1e3a8a;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+}
+
+.chat-input button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ================== */
+/* Emoji Picker */
+/* ================== */
 .emoji-container {
   position: relative;
   display: inline-block;
@@ -201,34 +247,21 @@
   opacity: 0.8;
 }
 
-
-.chat-input input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 8px rgba(37, 99, 235, 0.3);
+/* Chat Image Styling */
+.chat-image {
+  max-width: 200px; /* Adjust max width */
+  max-height: 200px; /* Adjust max height */
+  width: auto;
+  height: auto;
+  border-radius: 8px; /* Optional: Rounded corners */
+  object-fit: cover;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
-.chat-input button {
-  padding: 14px 20px;
-  background-color: #2563eb;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
-}
 
-.chat-input button:hover {
-  background-color: #1e3a8a;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
-}
-
-.chat-input button:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
-}
-
+/* ================== */
 /* Responsive Design */
+/* ================== */
 @media (max-width: 768px) {
   .chat-container {
     grid-template-columns: 1fr;
