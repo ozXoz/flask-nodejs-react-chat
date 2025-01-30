@@ -32,6 +32,7 @@ const ChatSettings = ({ setAvatar, blockedUsers = [], setBlockedUsers }) => {
         setAvatar(data.url);
         setAvatarPreview(data.url);
         localStorage.setItem("avatar", data.url);
+        window.dispatchEvent(new Event("storage")); // ✅ Trigger update in ChatList
       } else {
         console.error("Failed to upload avatar");
       }

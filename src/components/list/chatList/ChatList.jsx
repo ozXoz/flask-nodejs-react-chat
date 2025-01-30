@@ -9,6 +9,20 @@ const ChatList = ({ onSelectRecipient }) => {
   const [showSearchResults, setShowSearchResults] = useState(false); // Toggle between conversations and search results
   const [loading, setLoading] = useState(false); // Loading state
   const email = localStorage.getItem("email"); // Get logged-in user's email
+  
+  const [avatar, setAvatar] = useState(() => localStorage.getItem("avatar") || "./avatar.png");
+
+
+  // Listen for avatar changes in localStorage and update state
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const newAvatar = localStorage.getItem("avatar") || "./avatar.png";
+      setAvatar(newAvatar);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   // Fetch conversations on component mount
   useEffect(() => {
@@ -165,7 +179,7 @@ const ChatList = ({ onSelectRecipient }) => {
                 className="item"
                 onClick={() => onSelectRecipient(conv)}
               >
-                <img src="./avatar.png" alt="Avatar" />
+                                <img src={conv.avatar || "./avatar.png"} alt="Avatar" className="chat-avatar" />
                 <div className="texts">
                   <span>{conv.participant}</span>
                   <p>{conv.lastMessage}</p>
