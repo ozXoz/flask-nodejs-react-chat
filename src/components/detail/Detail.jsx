@@ -1,48 +1,89 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import ChatSettings from "../detail/ChatSettings";
+import ChatSettings, { blockUser, unblockUser } from "./ChatSettings";
 import "./detail.css";
 
-const Detail = ({ sharedFiles, blockedUsers, setBlockedUsers }) => { // ✅ Accept blockedUsers props
-  console.log("Detail component is rendering");
-
+const Detail = ({ recipient, sharedFiles, blockedUsers, setBlockedUsers }) => {
   const [openSections, setOpenSections] = useState({
     chatSettings: false,
-    privacyHelp: false,
     sharedPhotos: false,
   });
 
   const [avatar, setAvatar] = useState(localStorage.getItem("avatar") || "./avatar.png");
 
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const newAvatar = localStorage.getItem("avatar") || "./avatar.png";
+      setAvatar(newAvatar);
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  const [isBlocked, setIsBlocked] = useState(false);
   const navigate = useNavigate();
 
-  // Toggle section visibility
-  const toggleSection = (section) => {
-    setOpenSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
+  useEffect(() => {
+    if (recipient && blockedUsers.length > 0) {
+      setIsBlocked(blockedUsers.includes(recipient.participant));
+    }
+  }, [recipient, blockedUsers]);
+
+  const refetchBlockedUsers = async () => {
+    try {
+      const email = localStorage.getItem("email");
+      // <<<<< ADDED: mode: "cors" >>>>>
+      const response = await fetch(`http://127.0.0.1:4000/block/is-blocked?blocker=${email}`, {
+        mode: "cors",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBlockedUsers(data.blockedUsers || []);
+        localStorage.setItem("blockedUsers", JSON.stringify(data.blockedUsers || []));
+      }
+    } catch (err) {
+      console.error("[ERROR] fetchBlockedUsers:", err);
+    }
   };
 
-  // Handle logout functionality
+  const toggleSection = (section) => {
+    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("email");
     localStorage.removeItem("nickname");
-    localStorage.removeItem("token");
+    localStorage.removeItem("access_token");
     localStorage.removeItem("avatar");
     navigate("/login");
+  };
+
+  const handleBlockToggle = async () => {
+    if (!recipient || !recipient.participant) return;
+    try {
+      if (isBlocked) {
+        await unblockUser(recipient.participant, setBlockedUsers, blockedUsers);
+      } else {
+        await blockUser(recipient.participant, setBlockedUsers, blockedUsers);
+      }
+      // Force re-fetch
+      await refetchBlockedUsers();
+      window.dispatchEvent(new Event("blockedUsersUpdated"));
+    } catch (err) {
+      console.error("[ERROR] handleBlockToggle:", err);
+    }
   };
 
   return (
     <div className="detail">
       <div className="user">
-        <img src={avatar} alt="User Avatar" className="user-avatar" />
-        <h2>Oz Korkmaz</h2>
-        <p>Pellentesque habitant morbi</p>
+        {/* <<<<< ADDED crossOrigin="anonymous" >>>>> */}
+        <img src={avatar} alt="User Avatar" className="user-avatar" crossOrigin="anonymous" />
+        <h2>Your Profile</h2>
+        <p>Subtitle here ...</p>
       </div>
 
       <div className="info">
-        {/* Chat Settings */}
         <div className="option">
           <div className="title" onClick={() => toggleSection("chatSettings")}>
             <span>Chat Settings</span>
@@ -52,31 +93,14 @@ const Detail = ({ sharedFiles, blockedUsers, setBlockedUsers }) => { // ✅ Acce
             />
           </div>
           {openSections.chatSettings && (
-            <ChatSettings 
-              setAvatar={setAvatar} 
-              blockedUsers={blockedUsers}  // ✅ Pass blockedUsers
-              setBlockedUsers={setBlockedUsers}  // ✅ Pass setBlockedUsers
+            <ChatSettings
+              setAvatar={setAvatar}
+              blockedUsers={blockedUsers}
+              setBlockedUsers={setBlockedUsers}
             />
           )}
         </div>
 
-        {/* Privacy & Help */}
-        <div className="option">
-          <div className="title" onClick={() => toggleSection("privacyHelp")}>
-            <span>Privacy & Help</span>
-            <img
-              src={openSections.privacyHelp ? "./arrowDown.png" : "./arrowUp.png"}
-              alt="Toggle Arrow"
-            />
-          </div>
-          {openSections.privacyHelp && (
-            <div className="content">
-              <p>Your privacy is our priority...</p>
-            </div>
-          )}
-        </div>
-
-        {/* Shared Files */}
         <div className="option">
           <div className="title" onClick={() => toggleSection("sharedPhotos")}>
             <span>Shared Files</span>
@@ -88,11 +112,17 @@ const Detail = ({ sharedFiles, blockedUsers, setBlockedUsers }) => { // ✅ Acce
           {openSections.sharedPhotos && (
             <div className="photos">
               {sharedFiles.length > 0 ? (
-                sharedFiles.map((file, index) => (
-                  <div key={index} className="photoItem">
+                sharedFiles.map((file, i) => (
+                  <div key={i} className="photoItem">
                     <div className="fileDetail">
                       {file.type.startsWith("image") ? (
-                        <img src={file.url} alt="Shared" className="shared-img" />
+                        // crossOrigin is optional for <img> here
+                        <img
+                          src={file.url}
+                          alt="Shared"
+                          className="shared-img"
+                          crossOrigin="anonymous"
+                        />
                       ) : (
                         <embed src={file.url} type={file.type} className="shared-pdf" />
                       )}
@@ -111,7 +141,14 @@ const Detail = ({ sharedFiles, blockedUsers, setBlockedUsers }) => { // ✅ Acce
         </div>
       </div>
 
-      <button className="block">Block User</button>
+      {recipient && recipient.participant ? (
+        <button className="block" onClick={handleBlockToggle}>
+          {isBlocked ? "Unblock User" : "Block User"}
+        </button>
+      ) : (
+        <p className="error-message">Select a recipient to enable blocking.</p>
+      )}
+
       <button className="logout" onClick={handleLogout}>
         Logout
       </button>

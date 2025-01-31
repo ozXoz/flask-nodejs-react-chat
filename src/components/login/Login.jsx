@@ -27,6 +27,7 @@ const Login = () => {
         localStorage.setItem('access_token', data.access_token);
         localStorage.setItem('nickname', data.nickname); // Save nickname
         localStorage.setItem('email', data.email);       // Save email
+        localStorage.setItem("avatar", data.avatarUrl || "./avatar.png");
         navigate('/dashboard');
       } else {
         setError(data.error || 'An error occurred');

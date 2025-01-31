@@ -10,8 +10,10 @@ const PublicDisplay = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState(null);
   const [sharedFiles, setSharedFiles] = useState([]);
+
+  // For block/unblock
   const [blockedUsers, setBlockedUsers] = useState(
-    JSON.parse(localStorage.getItem("blockedUsers")) || [] // ✅ Load from localStorage
+    JSON.parse(localStorage.getItem("blockedUsers")) || []
   );
 
   useEffect(() => {
@@ -24,18 +26,31 @@ const PublicDisplay = () => {
   }, [navigate]);
 
   const handleSelectRecipient = (recipient) => {
+    console.log("Selected Recipient:", recipient);
     setSelectedRecipient(recipient);
   };
 
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (!isAuthenticated) return null;
 
   return (
     <div className="public-display">
+      {/* List of conversations & search */}
       <ChatList onSelectRecipient={handleSelectRecipient} />
-      <Chat recipient={selectedRecipient} setSharedFiles={setSharedFiles} blockedUsers={blockedUsers} /> {/* ✅ Pass blockedUsers */}
-      <Detail sharedFiles={sharedFiles} blockedUsers={blockedUsers} setBlockedUsers={setBlockedUsers} /> {/* ✅ Ensure Detail updates blockedUsers */}
+
+      {/* Main chat window */}
+      <Chat
+        recipient={selectedRecipient}
+        setSharedFiles={setSharedFiles}
+        blockedUsers={blockedUsers}
+      />
+
+      {/* Right-side detail panel (avatar, blocking, shared files) */}
+      <Detail
+        recipient={selectedRecipient}
+        sharedFiles={sharedFiles}
+        blockedUsers={blockedUsers}
+        setBlockedUsers={setBlockedUsers}
+      />
     </div>
   );
 };
