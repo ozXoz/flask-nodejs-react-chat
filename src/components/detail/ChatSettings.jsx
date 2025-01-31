@@ -59,6 +59,11 @@ const ChatSettings = ({ setAvatar, blockedUsers, setBlockedUsers }) => {
     localStorage.getItem("avatar") || "./avatar.png"
   );
   const [theme, setTheme] = useState(localStorage.getItem("chatTheme") || "light");
+   // 1) UseEffect to apply theme to <html>
+  //  useEffect(() => {
+  //   // This sets <html data-theme="light" or "dark">
+  //   document.documentElement.setAttribute("data-theme", theme);
+  // }, [theme]);
 
   // On mount, fetch the blocked user list
   const fetchBlockedUsers = async () => {
