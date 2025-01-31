@@ -74,6 +74,88 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => console.log("👋 User disconnected:", socket.id));
 });
 
+// Keep track of which user email (or ID) is tied to which socket
+// Keep track of which user email (or ID) is tied to which socket
+const userSocketMap = {};
+
+io.on("connection", (socket) => {
+  console.log("🔥 User connected:", socket.id);
+
+  // When the user joins, store a mapping from `userEmail` -> `socket.id`
+  socket.on("joinCall", (userEmail) => {
+    userSocketMap[userEmail] = socket.id;
+    console.log(`[joinCall] ${userEmail} mapped to socket ${socket.id}`);
+  });
+
+  /**
+   * 1) Caller sends "callUser" with { offer, to, from }
+   *    "to" is the target userEmail
+   *    "from" is the caller's userEmail
+   */
+  socket.on("callUser", ({ offer, to, from }) => {
+    const targetSocket = userSocketMap[to];
+    if (!targetSocket) {
+      console.log("[callUser] Target user is not online");
+      // You could emit back to caller that user not found:
+      return;
+    }
+    console.log(`[callUser] from=${from} to=${to}`);
+
+    // Pass the offer to the target
+    io.to(targetSocket).emit("callMade", { offer, from });
+  });
+
+  /**
+   * 2) Callee answers with "answerCall" { answer, to (callerEmail), from (calleeEmail) }
+   */
+  socket.on("answerCall", ({ answer, to, from }) => {
+    const targetSocket = userSocketMap[to];
+    if (!targetSocket) {
+      console.log("[answerCall] Caller is not online anymore");
+      return;
+    }
+    console.log(`[answerCall] from=${from} to=${to}`);
+    // Pass the answer back to the caller
+    io.to(targetSocket).emit("callAnswered", { answer, from });
+  });
+
+  /**
+   * 3) Exchange ICE Candidates
+   *    "iceCandidate" { candidate, to, from }
+   */
+  socket.on("iceCandidate", ({ candidate, to, from }) => {
+    const targetSocket = userSocketMap[to];
+    if (!targetSocket) return;
+    // Pass the ICE candidate along
+    io.to(targetSocket).emit("iceCandidate", { candidate, from });
+  });
+
+  /**
+   * 4) End call
+   */
+  socket.on("endCall", ({ to, from }) => {
+    const targetSocket = userSocketMap[to];
+    if (targetSocket) {
+      io.to(targetSocket).emit("callEnded", { from });
+    }
+  });
+
+  // Cleanup if user disconnects
+  socket.on("disconnect", () => {
+    console.log("👋 User disconnected:", socket.id);
+
+    // Optionally remove from userSocketMap
+    for (const [email, sockId] of Object.entries(userSocketMap)) {
+      if (sockId === socket.id) {
+        delete userSocketMap[email];
+        break;
+      }
+    }
+  });
+});
+
+
+
 // Define routes
 app.use("/chat", chatRoutes);
 app.use("/file", fileRoutes);

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import socket from "../utils/socket";
 import EmojiPicker from "emoji-picker-react";
 import "./chat.css";
+import VideoCall from "../call/VideoCall"; // Adjust path to your new VideoCall.jsx
 
 const Chat = ({ recipient, setSharedFiles, blockedUsers = [] }) => {
   const [messages, setMessages] = useState([]);
@@ -9,6 +10,9 @@ const Chat = ({ recipient, setSharedFiles, blockedUsers = [] }) => {
   const [file, setFile] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const messagesEndRef = useRef(null);
+
+    // << VIDEO CALL CHANGES >>
+    const [showVideoCall, setShowVideoCall] = useState(false);
 
   const myEmail = localStorage.getItem("email");
   const theme = localStorage.getItem("chatTheme") || "light";
@@ -177,6 +181,13 @@ const sendMessage = async () => {
         <>
           <div className="chat-header">
             <h4>Chat with {recipient.participant}</h4>
+            {/* << VIDEO CALL CHANGES >> */}
+            <button
+              onClick={() => setShowVideoCall(true)}
+              style={{ marginLeft: "auto" }}
+            >
+              Call
+            </button>
           </div>
           <div className="chat-messages">
             {messages.map((msg, index) => (
@@ -239,6 +250,14 @@ const sendMessage = async () => {
               Send
             </button>
           </div>
+          {/* << VIDEO CALL CHANGES >> */}
+          {showVideoCall && (
+            <VideoCall
+              currentUser={myEmail}
+              targetUser={recipient.participant}
+              onCloseCall={() => setShowVideoCall(false)}
+            />
+          )}
         </>
       ) : (
         <p className="no-selection">Select a conversation to start chatting</p>
