@@ -110,50 +110,66 @@ const Chat = ({ recipient, setSharedFiles, blockedUsers = [] }) => {
     }
   };
 
-  const sendMessage = () => {
-    if (!recipient || !recipient.participant) return;
-    if (blockedUsers.includes(recipient.participant)) {
-      alert("You cannot send messages to a user you have blocked.");
-      return;
-    }
+ /////////////////////////////
+// Chat.jsx snippet
+/////////////////////////////
 
-    if (message.trim() || file) {
-      const msgData = {
-        chatId,
-        sender: myEmail,
-        recipient: recipient.participant,
-        message: message.trim(),
-        file: file || null,
-        timestamp: new Date().toISOString(),
-      };
+const sendMessage = async () => {
+  if (!recipient || !recipient.participant) return;
+  if (blockedUsers.includes(recipient.participant)) {
+    alert("You cannot send messages to a user you have blocked.");
+    return;
+  }
 
-      // 1) Emit to socket for real-time
-      socket.emit("sendMessage", msgData);
+  if (message.trim() || file) {
+    const msgData = {
+      chatId,
+      sender: myEmail,
+      recipient: recipient.participant,
+      message: message.trim(),
+      file: file || null,
+      timestamp: new Date().toISOString(),
+    };
 
-      // 2) Add to local state
-      setMessages((prev) => [...prev, msgData]);
-
-      // 3) POST to Node backend to persist
-      fetch(`http://127.0.0.1:4000/chat/${chatId}`, {
+    // 1) Attempt to persist with Node:
+    try {
+      const res = await fetch(`http://127.0.0.1:4000/chat/${chatId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(msgData),
-        mode: "cors", // <<<<< ADDED
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (!data.error) {
-            console.log("Message saved:", data);
-          } else {
-            console.error("Error saving message:", data.error);
-          }
-        })
-        .catch((err) => console.error("Error saving message:", err));
+        mode: "cors",
+      });
 
+      if (!res.ok) {
+        // If server says 403, parse the error & show a message
+        if (res.status === 403) {
+          const { error } = await res.json();
+          alert(error || "You are blocked!");
+        } else {
+          console.error("Server error:", res.status);
+        }
+        // IMPORTANT: return early, do NOT add to local state or emit socket
+        return;
+      }
+
+      // 2) If success, get the actual saved data from the server
+      const savedMessage = await res.json();
+
+      // 3) Now we can add to local state
+      setMessages((prev) => [...prev, savedMessage]);
+
+      // 4) Emit via socket for real-time
+      socket.emit("sendMessage", savedMessage);
+
+      // Clear input
       setMessage("");
       setFile(null);
+    } catch (err) {
+      console.error("Error saving message:", err);
     }
-  };
+  }
+};
+
 
   return (
     <div className={`chat-main ${theme}`}>
