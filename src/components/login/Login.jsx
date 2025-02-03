@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './login.css';
-
+import CONFIG from '../utils/config';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,7 +12,7 @@ const Login = () => {
     e.preventDefault();
   
     try {
-      const response = await fetch('http://127.0.0.1:5000/auth/login', {
+      const response = await fetch(`${CONFIG.FLASK_BACKEND}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

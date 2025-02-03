@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import socket from "../../utils/socket";
 import "./chatList.css";
+import CONFIG from "../../utils/config";
 
 const ChatList = ({ onSelectRecipient }) => {
   const [search, setSearch] = useState("");
@@ -33,7 +34,7 @@ const ChatList = ({ onSelectRecipient }) => {
       setLoading(true);
       try {
         const response = await fetch(
-          `http://127.0.0.1:5000/auth/conversations?email=${email}`,
+          `${CONFIG.FLASK_BACKEND}/auth/conversations?email=${email}`,
           { mode: "cors" }
         );
         if (response.ok) {
@@ -95,7 +96,7 @@ const ChatList = ({ onSelectRecipient }) => {
     setLoading(true);
     try {
       const response = await fetch(
-        `http://127.0.0.1:5000/auth/users?q=${search}`,
+        `${CONFIG.FLASK_BACKEND}/auth/users?q=${search}`,
         { mode: "cors" }
       );
       if (response.ok) {
@@ -129,7 +130,7 @@ useEffect(() => {
       if (!newMap[participantEmail]) {
         try {
           const resp = await fetch(
-            `http://127.0.0.1:5000/auth/user?email=${participantEmail}`,
+            `${CONFIG.FLASK_BACKEND}/auth/user?email=${participantEmail}`,
             { mode: "cors" }
           );
           if (resp.ok) {

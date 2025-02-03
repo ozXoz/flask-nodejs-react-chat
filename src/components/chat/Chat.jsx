@@ -3,6 +3,8 @@ import socket from "../utils/socket";
 import EmojiPicker from "emoji-picker-react";
 import "./chat.css";
 import VideoCall from "../call/VideoCall"; // Adjust path to your new VideoCall.jsx
+import CONFIG from "../utils/config"; // Import our dynamic config
+
 
 const Chat = ({ recipient, setSharedFiles, blockedUsers = [] }) => {
   const [messages, setMessages] = useState([]);
@@ -29,7 +31,7 @@ const Chat = ({ recipient, setSharedFiles, blockedUsers = [] }) => {
       try {
         // <<<<< ADDED: mode: "cors" >>>>>
         const response = await fetch(
-          `http://127.0.0.1:5000/auth/chat/messages/${chatId}`,
+          `${CONFIG.FLASK_BACKEND}/auth/chat/messages/${chatId}`,
           { mode: "cors" }
         );
         if (response.ok) {
@@ -94,7 +96,7 @@ const Chat = ({ recipient, setSharedFiles, blockedUsers = [] }) => {
 
     try {
       // <<<<< ADDED: mode: "cors" >>>>>
-      const response = await fetch("http://127.0.0.1:4000/file/upload", {
+      const response = await fetch(`${CONFIG.NODE_BACKEND}/file/upload`, {
         method: "POST",
         body: formData,
         mode: "cors", // <<<<< ADDED
@@ -137,7 +139,7 @@ const sendMessage = async () => {
 
     // 1) Attempt to persist with Node:
     try {
-      const res = await fetch(`http://127.0.0.1:4000/chat/${chatId}`, {
+      const res = await fetch(`${CONFIG.NODE_BACKEND}/chat/${chatId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(msgData),

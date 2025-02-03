@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import ChatSettings, { blockUser, unblockUser } from "./ChatSettings";
 import "./detail.css";
 
+import CONFIG from "../utils/config"; // Import our dynamic config
+
+
+
 const Detail = ({ recipient, sharedFiles, blockedUsers, setBlockedUsers }) => {
   const [openSections, setOpenSections] = useState({
     chatSettings: false,
@@ -33,7 +37,7 @@ const Detail = ({ recipient, sharedFiles, blockedUsers, setBlockedUsers }) => {
     try {
       const email = localStorage.getItem("email");
       // <<<<< ADDED: mode: "cors" >>>>>
-      const response = await fetch(`http://127.0.0.1:4000/block/is-blocked?blocker=${email}`, {
+      const response = await fetch(`${CONFIG.NODE_BACKEND}/block/is-blocked?blocker=${email}`, {
         mode: "cors",
       });
       if (response.ok) {

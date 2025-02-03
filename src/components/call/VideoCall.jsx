@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import socket from "../utils/socket"; // Adjust path
 import "./videoCall.css";
+import CONFIG from "../utils/config"; // Import our dynamic config
 
 const VideoCall = ({ currentUser, targetUser, onCloseCall }) => {
   const [callState, setCallState] = useState("idle"); // "idle" | "calling" | "incoming" | "in-call"

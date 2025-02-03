@@ -14,30 +14,33 @@ const app = express();
 const server = http.createServer(app);
 
 const allowedOrigins = [
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5173", // ✅ Deployed Frontend", // ✅ Deployed Frontend
+  "http://localhost:5173", // ✅ Local Vite Frontend
 ];
+// ✅ CORS Fix
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true, // ✅ Required for cookies & auth
+}));
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.error(`🚨 Blocked by CORS: ${origin}`);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: allowedOrigins, // ❌ REMOVE "*", Use only allowed origins
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+    credentials: true, // ✅ Allow cookies & authentication headers
   })
 );
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ✅ Home Route - Confirms Successful Deployment
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to Node.js backend!" });
+});
 
 // Connect to Mongo
 const MONGO_URI = process.env.MONGO_URI || "your-default-mongodb-uri";
@@ -47,13 +50,44 @@ mongoose
   .catch((err) => console.error("❌ MongoDB Connection Error:", err));
 
 // Socket.io
+// ✅ Fix WebSocket CORS Issues
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
+    transports: ["websocket", "polling"], // ✅ Support WebSockets & Polling
   },
+  allowEIO3: true, // ✅ Allow older WebSocket clients
 });
+
+// 👇 Force WebSocket transport
+io.engine.on("headers", (headers, req) => {
+  headers["Access-Control-Allow-Origin"] = req.headers.origin;
+  headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
+  headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
+  headers["Access-Control-Allow-Credentials"] = "true";
+});
+
+io.on("connection", (socket) => {
+  console.log("✅ New WebSocket Connection:", socket.id);
+});
+
+// Debugging WebSocket Connections
+io.on("connection", (socket) => {
+  console.log("✅ WebSocket Connected:", socket.id);
+  
+  socket.on("disconnect", (reason) => {
+    console.warn("🔌 WebSocket Disconnected:", reason);
+  });
+
+  socket.on("connect_error", (error) => {
+    console.error("❌ WebSocket Connection Error:", error);
+  });
+});
+
+
+
 // Optionally export io if you want to use it in controllers
 // module.exports.io = io;
 

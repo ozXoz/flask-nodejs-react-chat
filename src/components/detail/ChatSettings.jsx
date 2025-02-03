@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import socket from "../utils/socket";
 import "./chatSettings.css";
+import CONFIG from "../utils/config"; // Import our dynamic config
 
 // Re-export block/unblock so Detail can import
 export const blockUser = async (userEmail, setBlockedUsers, blockedUsers) => {
   if (!userEmail) return;
   try {
     // <<<<< ADDED: mode: "cors" >>>>>
-    const response = await fetch("http://127.0.0.1:4000/block", {
+    const response = await fetch(`${CONFIG.NODE_BACKEND}/block`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -34,7 +35,7 @@ export const unblockUser = async (userEmail, setBlockedUsers, blockedUsers) => {
   if (!userEmail) return;
   try {
     // <<<<< ADDED: mode: "cors" >>>>>
-    const response = await fetch("http://127.0.0.1:4000/block/unblock", {
+    const response = await fetch(`${CONFIG.NODE_BACKEND}/block/unblock`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -72,7 +73,7 @@ const ChatSettings = ({ setAvatar, blockedUsers, setBlockedUsers }) => {
       if (!email) return;
       // <<<<< ADDED: mode: "cors" >>>>>
       const response = await fetch(
-        `http://127.0.0.1:4000/block/is-blocked?blocker=${email}`,
+        `${CONFIG.NODE_BACKEND}/block/is-blocked?blocker=${email}`,
         { mode: "cors" }
       );
       if (response.ok) {
@@ -111,7 +112,7 @@ const handleAvatarUpload = async (e) => {
   formData.append("email", localStorage.getItem("email")); // <<<<< KEY LINE
 
   try {
-    const response = await fetch("http://127.0.0.1:4000/file/upload-avatar", {
+    const response = await fetch(`${CONFIG.NODE_BACKEND}/file/upload-avatar`, {
       method: "POST",
       body: formData,
       mode: "cors", 

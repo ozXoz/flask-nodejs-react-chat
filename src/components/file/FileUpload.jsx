@@ -1,13 +1,14 @@
 import React from "react";
 import { useDropzone } from "react-dropzone";
 import "./fileUpload.css";
+import CONFIG from "../utils/config";
 
 const FileUpload = () => {
   const onDrop = (acceptedFiles) => {
     const formData = new FormData();
     formData.append("file", acceptedFiles[0]);
 
-    fetch("http://localhost:4000/file/upload", {
+    fetch(`${CONFIG.NODE_BACKEND}/file/upload`, {
       method: "POST",
       body: formData,
     })

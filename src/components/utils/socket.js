@@ -1,16 +1,24 @@
 import { io } from "socket.io-client";
+import CONFIG from "./config"; // ✅ Import backend config
 
-const SOCKET_URL = "http://localhost:4000"; // or your Node server URL
-
-const socket = io(SOCKET_URL, {
-  withCredentials: true,
-  transports: ["websocket", "polling"],
+const socket = io(CONFIG.NODE_BACKEND, {
+  withCredentials: true, // ✅ Allow credentials (cookies, tokens)
+  transports: ["polling", "websocket"], // ✅ Use polling first, then WebSockets
+  reconnection: true, 
+  reconnectionAttempts: 5, 
+  reconnectionDelay: 3000, 
 });
 
-// Listen for block/unblock events
-socket.on("blockedUsersUpdated", () => {
-  console.log("[SOCKET] Blocked users list updated - Fetching new data...");
-  window.dispatchEvent(new Event("blockedUsersUpdated"));
+socket.on("connect", () => {
+  console.log("✅ WebSocket Connected:", socket.id);
+});
+
+socket.on("disconnect", (reason) => {
+  console.warn("🔌 WebSocket Disconnected:", reason);
+});
+
+socket.on("connect_error", (error) => {
+  console.error("❌ WebSocket Connection Error:", error);
 });
 
 export default socket;
